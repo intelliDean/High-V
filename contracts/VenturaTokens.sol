@@ -4,13 +4,14 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 import {VenturaErrors} from "./VenturaErrors.sol";
 
-contract VenturaTokens is ERC1155Burnable, Ownable {
+contract VenturaTokens is ERC1155, Ownable {
+
+    uint256 public constant VENTURA = 0;
     uint256 public constant CREATOR_NFT_ID = 1;
-    uint256 public constant ADMIN_NFT_ID = 2;
-    uint256 public constant POAT_NFT_ID = 3;
+    uint256 public constant  POAT_NFT_ID = 2;
+    
 
     uint8 public constant TOKEN_LIMIT = 1;
 
@@ -23,38 +24,61 @@ contract VenturaTokens is ERC1155Burnable, Ownable {
     }
 
     function _setURIS() private {
+
         nft_metadata.push(
-            "https://ipfs.io/ipfs/QmRxnCg8DShn8pyYfDD8MyM9vsnAUYGSarU8SK4BykGUKv/ventura_metadata.json"
+            "https://ipfs.io/ipfs/QmfThmmntg4dKSa8EHmbRQWUkt36fzCK54EV3BeT4Ks7hE/ventura.json"
+        );
+        tokenURI[1] = "https://ipfs.io/ipfs/QmfThmmntg4dKSa8EHmbRQWUkt36fzCK54EV3BeT4Ks7hE/ventura.json";
+
+        nft_metadata.push(
+            "https://ipfs.io/ipfs/QmfThmmntg4dKSa8EHmbRQWUkt36fzCK54EV3BeT4Ks7hE/creator.json"
         );
 
-        _insetURI(
-            1,
-            "https://ipfs.io/ipfs/QmadBkQMh6cjAKG1ZzJRSAa89MSQW1HSqYMbahW66eD2C7/coin_metadata.json"
+        tokenURI[2] = "https://ipfs.io/ipfs/QmfThmmntg4dKSa8EHmbRQWUkt36fzCK54EV3BeT4Ks7hE/creator.json";
+
+        nft_metadata.push(
+            "https://ipfs.io/ipfs/QmfThmmntg4dKSa8EHmbRQWUkt36fzCK54EV3BeT4Ks7hE/poap.json"
         );
-        _insetURI(
-            2,
-            "https://ipfs.io/ipfs/Qmcgo9gWVQPt2QxTNxyAJhpruy4TF7r5cMEbzSdRr5FCUN/trophy_metadata.json"
-        );
+
+        tokenURI[3] =  "https://ipfs.io/ipfs/QmfThmmntg4dKSa8EHmbRQWUkt36fzCK54EV3BeT4Ks7hE/poap.json";
     }
 
+    function mint(address to, uint256 id, uint256 value, bytes memory data) external {
+        super._mint(to, id, value, data);
+    }
+
+    
     function contractURI() public pure returns (string memory) {
         return
-            "https://ipfs.io/ipfs/QmRxnCg8DShn8pyYfDD8MyM9vsnAUYGSarU8SK4BykGUKv/ventura_metadata.json";
+            "https://ipfs.io/ipfs/QmfThmmntg4dKSa8EHmbRQWUkt36fzCK54EV3BeT4Ks7hE/ventura.json";
     }
 
-    function _insetURI(uint256 _id, string memory _uri) internal {
+    function getIDSpace() private view returns(uint256) {
+        return nft_metadata.length;
+    }
+
+    function _insetURI(string memory _uri) internal {
+
+        uint256 _id = getIDSpace() + 1;
+
         tokenURI[_id] = _uri;
         nft_metadata.push(_uri);
         emit URI(_uri, _id);
     }
 
-    function setURI(uint256 _id, string memory _uri) external onlyOwner {
-        _insetURI(_id, _uri);
+    function setURI( string memory _uri) external onlyOwner {
+        _insetURI(_uri);
     }
 
     function uri(uint256 _id) public view override returns (string memory) {
+        // return nft_metadata[_id];
         return tokenURI[_id];
     }
+
+    // function mintNFT(address recipient, uint256 nftId) external onlyOwner {
+        
+    //      _mint(recipient, nftId, TOKEN_LIMIT, "");
+    // }
 
     function safeTransferFrom(
         address from,

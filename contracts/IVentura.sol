@@ -11,27 +11,39 @@ interface IVentura {
     struct Event {
         address creator;
         bytes32 eventId;
+        string imageUrl;
         string eventTitle;
         string description;
         string venue;
         uint256 price;
-        address[] admins;
         address[] participants;
         uint256[] eventDate;
-        string startTime;
-        uint256 eventDurationInDays;
+        Timing timing;
         EventType eventType;
         uint256 createdAt;
+        BoolCheck boolCheck;
+    }
+
+    struct BoolCheck {
         bool regIsOn;
+        bool isOver;
+        bool cancelled;
+    }
+
+    struct Timing {
+        string startTime;
+        string endTime;
     }
 
     struct EventData {
         string eventTitle;
+        string imageUrl;
         string description;
+        uint256 price;
         string venue;
         uint256[] eventDate;
         string startTime;
-        EventType eventType;
+        string endTime;
     }
 
     struct Participants {
@@ -52,12 +64,6 @@ interface IVentura {
         string eventTitle
     );
 
-    event AdminAdded(
-        address indexed creator,
-        bytes32 indexed eventId,
-        uint256 numberOfAdmins
-    );
-
     event Registered(
         address indexed participant,
         bytes32 indexed eventId,
@@ -69,6 +75,8 @@ interface IVentura {
         address indexed participant,
         bytes32 indexed eventId
     );
+
+    event EventCancelled(bytes32 indexed _eventId);
 
     event RegInfo(bytes32 indexed eventId, string message);
 }

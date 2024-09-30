@@ -14,7 +14,13 @@ contract VenturaErrors {
     error INSUFFICIENT_BALANCE(uint256);
     error TOO_MUCH_ADMINS(uint);
     error CAN_NOT_REGISTER_FOR_YOUR_OWN_EVENT();
-    error REGISTRATION_IS_OVER();
+    error REGISTRATION_NOT_ON();
     error REG_IS_OVER();
-
+    error UNAUTHORIZED();
+    error INSUFFICIENT_VALUE(uint256);
+    error TOO_LATE_TO_CANCEL_EVENT();
+    error N0_EVENT();
+    error NOT_REGISTERED();
+    error OwnableUnauthorizedAccount(address);
+    error EVENT_STILL_ON();
 }
