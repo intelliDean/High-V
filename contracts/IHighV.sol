@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-interface IVentura {
+interface IHighV {
     enum EventType {
         NULL,
         FREE,
@@ -10,45 +10,47 @@ interface IVentura {
 
     struct Event {
         address creator;
+        string creatorEmail;
         bytes32 eventId;
-        string imageUrl;
+        string eventImageUrl;
         string eventTitle;
         string description;
         string venue;
         uint256 price;
         address[] participants;
-        uint256[] eventDate;
-        Timing timing;
+        DateTime[] dateTime;
+        string eventCategory;
         EventType eventType;
         uint256 createdAt;
-        BoolCheck boolCheck;
+        Checks checks;
     }
 
-    struct BoolCheck {
+    struct Checks {
         bool regIsOn;
-        bool isOver;
-        bool cancelled;
+        bool eventIsOn;
     }
 
-    struct Timing {
-        string startTime;
-        string endTime;
+    struct DateTime {
+        uint256 eventDate;
+        uint256 startTime;
+        uint256 endTime;
     }
 
     struct EventData {
         string eventTitle;
-        string imageUrl;
+        string creatorEmail;
+        string eventImageUrl;
         string description;
-        uint256 price;
         string venue;
-        uint256[] eventDate;
-        string startTime;
-        string endTime;
+        DateTime[] dateTime;
+        string eventCategory;
+        uint256 price;
     }
 
-    struct Participants {
+    struct Participant {
         address participantAddress;
         string email;
+        bool attended;
     }
 
     struct Creator {
@@ -64,6 +66,12 @@ interface IVentura {
         string eventTitle
     );
 
+    event AdminAdded(
+        address indexed creator,
+        bytes32 indexed eventId,
+        uint256 numberOfAdmins
+    );
+
     event Registered(
         address indexed participant,
         bytes32 indexed eventId,
@@ -76,7 +84,7 @@ interface IVentura {
         bytes32 indexed eventId
     );
 
-    event EventCancelled(bytes32 indexed _eventId);
-
     event RegInfo(bytes32 indexed eventId, string message);
+
+     function _createEvent(EventData memory _eventData) external;
 }

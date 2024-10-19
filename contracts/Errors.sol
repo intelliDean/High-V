@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
-contract VenturaErrors {
+contract Errors {
 
     error ONLY_OWNER(address);
     error ADDRESS_ZERO_NOT_ALLOWED();
