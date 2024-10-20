@@ -4,23 +4,24 @@ pragma solidity 0.8.20;
 contract Errors {
 
     error ONLY_OWNER(address);
-    error ADDRESS_ZERO_NOT_ALLOWED();
+    error ADDRESS_NOT_ALLOWED(address);
     error EVENT_NOT_FOUND(bytes32);
     error IS_A_PARTICIPANT(address);
     error IS_AN_ADMIN(address);
     error ADMIN_COMPLETED();
-    error TOKEN_NOT_TRANSFERABLE();
+    error NFT_NOT_TRANSFERABLE();
     error INCORRECT_VALUE(uint256);
     error INSUFFICIENT_BALANCE(uint256);
     error TOO_MUCH_ADMINS(uint);
     error CAN_NOT_REGISTER_FOR_YOUR_OWN_EVENT();
-    error REGISTRATION_NOT_ON();
+    error REGISTRATION_IS_OVER();
     error REG_IS_OVER();
-    error UNAUTHORIZED();
-    error INSUFFICIENT_VALUE(uint256);
-    error TOO_LATE_TO_CANCEL_EVENT();
-    error N0_EVENT();
-    error NOT_REGISTERED();
-    error OwnableUnauthorizedAccount(address);
-    error EVENT_STILL_ON();
+    error INCORRECT_TIME_DATE();
+    error REG_IS_NOT_ON();
+    error REGISTERED_ALREADY();
+    error EVENT_NOT_ON();
+    error NOT_REGISTERED(address _participant, bytes32 _eventId);
+    error REG_FAILED();
+
 }
+

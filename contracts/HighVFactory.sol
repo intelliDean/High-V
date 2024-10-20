@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./HighV.sol";
-import "./IHighV.sol";
-import "./Errors.sol";
-import "./HighVNFT.sol";
+import "contracts/Ventura.sol";
+import "contracts/IVentura.sol";
+import "contracts/Errors.sol";
+import "contracts/Tokens/VenturaNFT.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 

@@ -50,6 +50,7 @@ interface IHighV {
     struct Participant {
         address participantAddress;
         string email;
+        uint8 userType;
         bool attended;
     }
 
