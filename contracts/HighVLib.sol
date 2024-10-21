@@ -1,292 +1,282 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./IVentura.sol";
-import "./Errors.sol";
-import "@openzeppelin/contracts/interfaces/IERC20.sol";
+import "contracts/IHighV.sol";
+import "contracts/Errors.sol";
 
 library HighVLib {
-
+    // 1
     function _createEvent(
-        mapping(bytes32 => IVentura.Event) storage eventsCreated,
-        bytes32[] storage events,
-        IVentura.EventData memory _eventData,
-        address _creator
-    ) public returns (bytes32) {
-        if (_creator == address(0)) revert Errors.ADDRESS_NOT_ALLOWED(_creator);
-        if (_eventData.dateTime[0].eventDate < block.timestamp)
-            revert Errors.INCORRECT_TIME_DATE();
-
-        bytes32 _eventId = keccak256(abi.encode(_eventData, _creator));
-        IVentura.Event storage _event = eventsCreated[_eventId];
-
-        _event.creator = _creator;
-        _event.creatorEmail = _eventData.creatorEmail;
-        _event.eventId = _eventId;
-        _event.eventImageUrl = _eventData.eventImageUrl;
-        _event.eventTitle = _eventData.eventTitle;
-        _event.description = _eventData.description;
-        _event.venue = _eventData.venue;
-        _event.price = _eventData.price;
-        _event.eventCategory = _eventData.eventCategory;
-
-        _event.eventType = _eventData.price > 0
-            ? IVentura.EventType.PAID
-            : IVentura.EventType.FREE;
-
-        _event.createdAt = block.timestamp;
+        IHighV.Event storage eventDetails,
+        IHighV.EventData memory _eventData
+    ) public {
+        eventDetails.creatorPhoneNumber = _eventData.creatorPhone;
+        eventDetails.creatorEmail = _eventData.creatorEmail;
+        eventDetails.eventImageUrl = _eventData.eventImageUrl;
+        eventDetails.eventTitle = _eventData.eventTitle;
+        eventDetails.description = _eventData.description;
+        eventDetails.venue = _eventData.venue;
+        eventDetails.price = _eventData.price;
+        eventDetails.eventCategory = _eventData.eventCategory;
+        eventDetails.eventType = _eventData.price > 0
+            ? IHighV.EventType.PAID
+            : IHighV.EventType.FREE;
+        eventDetails.createdAt = block.timestamp;
 
         for (uint256 i = 0; i < _eventData.dateTime.length; i++) {
-            _event.dateTime.push(_eventData.dateTime[i]);
-        }
-
-        events.push(_eventId);
-
-        return _eventId;
-    }
-
-
-    function _getAllEvents(
-        bytes32[] storage events,
-        mapping(bytes32 => IVentura.Event) storage eventsCreated
-    ) public view returns (IVentura.Event[] memory _allEvents) {
-        uint256 _eventLength = events.length;
-        _allEvents = new IVentura.Event[](_eventLength);
-
-        for (uint256 i = 0; i < _eventLength; i++) {
-            _allEvents[i] = eventsCreated[events[i]];
+            eventDetails.dateTime.push(_eventData.dateTime[i]);
         }
     }
 
-    function _getEventById(
-        mapping(bytes32 => IVentura.Event) storage eventsCreated,
-        bytes32 _eventId
-    ) public view returns (IVentura.Event storage) {
-        return eventsCreated[_eventId];
+    //2
+    function _getEventInfo(IHighV.Event storage eventDetails)
+        public
+        pure
+        returns (IHighV.Event memory)
+    {
+        return eventDetails;
     }
 
-    function _getAllMyEvents(
-        bytes32[] storage events,
-        mapping(bytes32 => IVentura.Event) storage eventsCreated,
-        address _creator
-    ) public view returns (IVentura.Event[] memory _myEvents) {
-        // _myEvents = new IVentura.Event[](0);
-
-        for (uint256 i = 0; i < events.length; i++) {
-            IVentura.Event memory _event = eventsCreated[events[i]];
-
-            if (_event.creator == _creator) {
-                _myEvents[i] = _event;
-            }
-        }
+    //3
+    function _getCreator(address _creator) public pure returns (address) {
+        return _creator;
     }
 
-    function _updateCreatorEmail(
-        mapping(bytes32 => IVentura.Event) storage eventsCreated,
-        bytes32 _eventId,
-        address _creator,
-        string memory _newEmail
-    ) public {
-        IVentura.Event storage _event = _getEventById(eventsCreated, _eventId);
-        if (_creator != _event.creator) revert Errors.ONLY_OWNER(_creator);
-
-        _event.creatorEmail = _newEmail;
-    }
-
-    function _updateVenue(
-        mapping(bytes32 => IVentura.Event) storage eventsCreated,
-        bytes32 _eventId,
-        address _creator,
-        string memory _newVenue
-    ) public {
-        IVentura.Event storage _event = _getEventById(eventsCreated, _eventId);
-        if (_creator != _event.creator) revert Errors.ONLY_OWNER(_creator);
-
-        _event.venue = _newVenue;
-    }
-
-    function _openRegistration(
-        mapping(bytes32 => IVentura.Event) storage eventsCreated,
-        address _creator,
-        bytes32 _eventId
-    ) public {
-        IVentura.Event storage _event = _getEventById(eventsCreated, _eventId);
-        if (_creator != _event.creator) revert Errors.ONLY_OWNER(_creator);
-
-        if (!_event.checks.regIsOn) {
-            _event.checks.regIsOn = true;
-        }
-    }
-
-    function _closeRegistration(
-        mapping(bytes32 => IVentura.Event) storage eventsCreated,
-        address _creator,
-        bytes32 _eventId
-    ) public {
-        IVentura.Event storage _event = _getEventById(eventsCreated, _eventId);
-        if (_creator != _event.creator) revert Errors.ONLY_OWNER(_creator);
-
-        if (_event.checks.regIsOn) {
-            _event.checks.regIsOn = false;
-        }
-    }
-
+    //4
+    //this will be updated later to include payment and also the whitelisted users
     function _register4Event(
-        mapping(bytes32 => IVentura.Event) storage eventsCreated,
-        mapping(address => mapping(bytes32 => IVentura.Participant))
-            storage participants,
-        IERC20 PAYMENT,
-        bytes32 _eventId,
+        IHighV.Event storage eventDetails,
+        mapping(address => IHighV.Registrant) storage registrants,
+        address[] storage allAttendees,
+        mapping(address => bool) storage isWhitelisted,
+        IHighV PAYMENT,
         address _user,
-        address _cotractAddress,
+        address _contractAddress,
         string memory _email
     ) public {
-        IVentura.Event storage _event = eventsCreated[_eventId];
 
-        if (!_event.checks.regIsOn) revert Errors.REG_IS_NOT_ON();
-        if (participants[_user][_eventId].participantAddress != address(0))
-            revert Errors.REGISTERED_ALREADY();
+        if (isWhitelisted[_user]) {
+            _addRegistrant(registrants, allAttendees, _user, _email);
 
-        if (_event.eventType == IVentura.EventType.PAID) {//PAID EVENT
+        } else if (eventDetails.eventType == IHighV.EventType.PAID) {
 
             uint256 _userBalance = PAYMENT.balanceOf(_user);
-            uint256 _eventPrice = _event.price;
+            uint256 _eventPrice = eventDetails.price;
 
             if (_userBalance < _eventPrice)
                 revert Errors.INSUFFICIENT_BALANCE(_userBalance);
 
-            //User would have approved this tx from the payment contract
-            //usually frontend will call the payment contract directly so the user can approve this tx
-            if (PAYMENT.transferFrom(_user, _cotractAddress, _eventPrice)) {
-                _addParticipant(participants, _event, _user, _eventId, _email);
-            } else {
-                revert Errors.REG_FAILED();
-            }
-        } else {//FREE EVENT
-            _addParticipant(participants, _event, _user, _eventId, _email);
+            if (!PAYMENT.transferFrom(_user, _contractAddress, _eventPrice))
+                revert Errors.TRANSFER_FAIL();
+
+            _addRegistrant(registrants, allAttendees, _user, _email);
+
+        } else {
+            
+            _addRegistrant(registrants, allAttendees, _user, _email);
         }
     }
 
-    function _addParticipant(
-        mapping(address => mapping(bytes32 => IVentura.Participant))
-            storage participants,
-        IVentura.Event storage _event,
+    function _addRegistrant(
+        mapping(address => IHighV.Registrant) storage registrants,
+        address[] storage allAttendees,
         address _user,
-        bytes32 _eventId,
         string memory _email
     ) private {
-        IVentura.Participant storage _participant = participants[_user][
-            _eventId
-        ];
-        _participant.participantAddress = _user;
-        _participant.email = _email;
-        _participant.userType = 1;
+        IHighV.Registrant storage _registrant = registrants[_user];
+        _registrant.regAddress = _user;
+        _registrant.email = _email;
+        _registrant.regType = 1;
 
-        _event.participants.push(_user);
+        allAttendees.push(_user);
     }
 
-    function _creatorWhitelistAddress(
-        mapping(address => bool) storage isWhitelisted,
+    //5
+    function _getRegistrant(
+        mapping(address => IHighV.Registrant) storage registrants,
         address _user
-    ) {
-        code
+    ) public view returns (IHighV.Registrant memory) {
+        return registrants[_user];
     }
 
-    // function _creatorAddUser(
-    //     mapping(bytes32 => IVentura.Event) storage eventsCreated,
-    //     mapping(address => mapping(bytes32 => IVentura.Participant))
-    //         storage participants,
-    //     bytes32 _eventId,
-    //     address _creator,
-    //     address _user,
-    //     string memory _email
-    // ) public {
-    //     IVentura.Event storage _event = _getEventById(eventsCreated, _eventId);
-    //     if (_creator != _event.creator) revert Errors.ONLY_OWNER(_creator);
+    //6
+    function _getAllRegistrant(
+        mapping(address => IHighV.Registrant) storage registrants,
+        address[] storage allAttendees
+    ) public view returns (IHighV.Registrant[] memory _allRegistrants) {
+        _allRegistrants = new IHighV.Registrant[](allAttendees.length);
 
-
-
-    // }
-
-
-    function _getAllEventParticipants(
-        mapping(bytes32 => IVentura.Event) storage eventsCreated,
-        mapping(address => mapping(bytes32 => IVentura.Participant))
-            storage participants,
-        bytes32 _eventId
-    ) public view returns (IVentura.Participant[] memory _allParticipants) {
-        address[] memory _participantsAddress = eventsCreated[_eventId]
-            .participants;
-
-        for (uint256 i = 0; i < _participantsAddress.length; i++) {
-            _allParticipants[i] = participants[_participantsAddress[i]][
-                _eventId
-            ];
+        for (uint256 i = 0; i < allAttendees.length; i++) {
+            _allRegistrants[i] = registrants[allAttendees[i]];
         }
     }
 
-    function _turnEventOn(
-        mapping(bytes32 => IVentura.Event) storage eventsCreated,
-        bytes32 _eventId,
-        address _creator
-    ) public {
-        IVentura.Event storage _event = _getEventById(eventsCreated, _eventId);
-        if (_creator != _event.creator) revert Errors.ONLY_OWNER(_creator);
-
-        if (!_event.checks.eventIsOn) {
-            _event.checks.eventIsOn = true;
-        }
-    }
-
-    function _endEvent(
-        mapping(bytes32 => IVentura.Event) storage eventsCreated,
-        bytes32 _eventId,
-        address _creator
-    ) public {
-        IVentura.Event storage _event = _getEventById(eventsCreated, _eventId);
-        if (_creator != _event.creator) revert Errors.ONLY_OWNER(_creator);
-
-        if (_event.checks.eventIsOn) {
-            _event.checks.eventIsOn = false;
-        }
-    }
-
-    function _markAttendance(
-        mapping(bytes32 => IVentura.Event) storage eventsCreated,
-        mapping(address => mapping(bytes32 => IVentura.Participant))
-            storage participants,
-        bytes32 _eventId,
-        address _participant
-    ) public {
-        if (!eventsCreated[_eventId].checks.eventIsOn)
-            revert Errors.EVENT_NOT_ON();
-        if (
-            participants[_participant][_eventId].participantAddress ==
-            address(0)
-        ) revert Errors.NOT_REGISTERED(_participant, _eventId);
-
-        if (!participants[_participant][_eventId].attended) {
-            participants[_participant][_eventId].attended = true;
-        }
-    }
-
+    //7
     function _getAllAttendees(
-        mapping(bytes32 => IVentura.Event) storage eventsCreated,
-        mapping(address => mapping(bytes32 => IVentura.Participant))
-            storage participants,
-        bytes32 _eventId
-    ) public view returns (IVentura.Participant[] memory _allAttendees) {
-        address[] memory _participantsAddress = eventsCreated[_eventId]
-            .participants;
+        mapping(address => IHighV.Registrant) storage registrants,
+        address[] storage allAttendees
+    ) public view returns (IHighV.Registrant[] memory _allAttendees) {
+        uint256 count = 0;
+        uint256 _length = allAttendees.length;
 
-        for (uint256 i = 0; i < _participantsAddress.length; i++) {
-            IVentura.Participant memory _attendee = participants[
-                _participantsAddress[i]
-            ][_eventId];
-
-            if (_attendee.attended) {
-                _allAttendees[i] = _attendee;
+        for (uint256 i = 0; i < _length; i++) {
+            if (registrants[allAttendees[i]].attended) {
+                count++;
             }
+        }
+
+        _allAttendees = new IHighV.Registrant[](count);
+
+        uint256 index = 0;
+        for (uint256 i = 0; i < _length; i++) {
+            if (registrants[allAttendees[i]].attended) {
+                _allAttendees[index] = registrants[allAttendees[i]];
+                index++;
+            }
+        }
+    }
+
+    //8
+    function _markAttendance(
+        mapping(address => IHighV.Registrant) storage registrants,
+        address _user
+    ) public {
+        registrants[_user].attended = true;
+    }
+
+    //9
+    function _updateVenue(
+        IHighV.Event storage eventDetails,
+        string memory _venue
+    ) public {
+        eventDetails.venue = _venue;
+    }
+
+    //10
+    function _updateCreatorEmail(
+        IHighV.Event storage eventDetails,
+        string memory _creatorEmail
+    ) public {
+        eventDetails.creatorEmail = _creatorEmail;
+    }
+
+    //11
+    function _updateEventImageUrl(
+        IHighV.Event storage eventDetails,
+        string memory _eventImageUrl
+    ) public {
+        eventDetails.eventImageUrl = _eventImageUrl;
+    }
+
+    //12
+    function _updateEventPrice(
+        IHighV.Event storage eventDetails,
+        uint256 _price
+    ) public {
+        eventDetails.price = _price;
+
+        eventDetails.eventType = eventDetails.price > 0
+            ? IHighV.EventType.PAID
+            : IHighV.EventType.FREE;
+    }
+
+    //13
+    function _openOrCloseRegistration(IHighV.Event storage eventDetails)
+        public
+    {
+        eventDetails.regIsOn = !eventDetails.regIsOn;
+    }
+
+    //14
+    function _startEvent(IHighV.Event storage eventDetails) public {
+        eventDetails.eventStatus = IHighV.EventStatus.START;
+    }
+
+    //15
+    function _whitelistUser(
+        mapping(address => bool) storage isWhitelisted,
+        address[] memory _user
+    ) public {
+        for (uint256 i = 0; i < _user.length; i++) {
+            isWhitelisted[_user[i]] = true;
+        }
+    }
+
+    //16
+    function _updateCreatorPhoneNumber(
+        IHighV.Event storage eventDetails,
+        string memory _creatorPhoneNumber
+    ) public {
+        eventDetails.creatorPhoneNumber = _creatorPhoneNumber;
+    }
+
+    //17
+    function _endEvent(IHighV.Event storage eventDetails) public {
+        eventDetails.eventStatus = IHighV.EventStatus.ENDED;
+    }
+
+    //18
+    function _cancelEvent(IHighV.Event storage eventDetails) public {
+        eventDetails.eventStatus = IHighV.EventStatus.CANCELLED;
+    }
+
+    //19
+    function _postponeEvent(IHighV.Event storage eventDetails) public {
+        eventDetails.eventStatus = IHighV.EventStatus.POSTPONED;
+    }
+
+    //20
+    function _claimPOAP(
+        IHighV.Event storage eventDetails,
+        mapping(address => IHighV.Registrant) storage registrants,
+        IHighV HIGHVNFT,
+        address _attendee
+    ) public {
+        if (eventDetails.eventStatus != IHighV.EventStatus.ENDED)
+            revert Errors.EVENT_NOT_ENDED();
+
+        IHighV.Registrant memory _registrant = _getRegistrant(
+            registrants,
+            _attendee
+        );
+
+        if (_registrant.attended) {
+            HIGHVNFT.mint(_registrant.regAddress, _registrant.regType, 1);
+        } else {
+            revert Errors.INELLIGIBLE(_attendee);
+        }
+    }
+
+    //21
+    function _addUserTypes(
+        mapping(string => uint8) storage userType,
+        string[] storage allUserTypes,
+        string[] memory _userTypes
+    ) public {
+        for (uint8 i = 0; i < _userTypes.length; i++) {
+            userType[_userTypes[i]] = i + 1;
+            allUserTypes.push(_userTypes[i]);
+        }
+    }
+
+    //22
+    function _getAllUserTypes(string[] storage allUserTypes)
+        public
+        pure
+        returns (string[] memory)
+    {
+        return allUserTypes;
+    }
+
+    //23
+    function _addTypeToUsers(
+        mapping(address => IHighV.Registrant) storage registrants,
+        mapping(string => uint8) storage userType,
+        address[] memory _users,
+        string memory _userType
+    ) public {
+        for (uint256 i = 0; i < _users.length; i++) {
+            registrants[_users[i]].regType = userType[_userType];
         }
     }
 }
