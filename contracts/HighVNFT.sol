@@ -7,29 +7,37 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "./Errors.sol";
 
 contract HighVNFT is ERC1155Burnable, Ownable {
-
     string nftURI;
 
     uint8 public constant TOKEN_LIMIT = 1;
 
-
-    constructor(address _owner, string memory _nftURI) 
-    ERC1155("") 
-    Ownable(_owner) {
-
-        nftURI = string(abi.encodePacked("https://ipfs.io/ipfs/", _nftURI, "/"));
+    constructor(address _owner, string memory _nftURI)
+        ERC1155("")
+        Ownable(_owner)
+    {
+        nftURI = string(
+            abi.encodePacked("https://ipfs.io/ipfs/", _nftURI, "/")
+        );
     }
 
-    function mint(address recipient, uint nftId, uint quantity) external  {
-         _mint(recipient, nftId, quantity, "");
+    function mint(address recipient, uint256 nftId) external {
+        _mint(recipient, nftId, TOKEN_LIMIT, "");
     }
 
-    function contractURI() public view  returns (string memory) {
+    function contractURI() public view returns (string memory) {
         return uri(0);
     }
-   
-    function uri(uint256 _tokenid) public   override    view returns (string memory) {
-        return string(abi.encodePacked(nftURI, Strings.toString(_tokenid), ".json"));
+
+    function uri(uint256 _tokenid)
+        public
+        view
+        override
+        returns (string memory)
+    {
+        return
+            string(
+                abi.encodePacked(nftURI, Strings.toString(_tokenid), ".json")
+            );
     }
 
     function safeTransferFrom(
@@ -55,7 +63,6 @@ contract HighVNFT is ERC1155Burnable, Ownable {
     }
 
     function _notTransferable() internal view {
-        if (msg.sender.code.length >= 0)
-            revert Errors.NFT_NOT_TRANSFERABLE();
+        if (msg.sender.code.length >= 0) revert Errors.NFT_NOT_TRANSFERABLE();
     }
 }

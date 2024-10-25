@@ -3,6 +3,8 @@ pragma solidity ^0.8.20;
 
 interface IHighV {
     struct Event {
+        address creator;
+        bytes32 eventId;
         string creatorEmail;
         string creatorPhoneNumber;
         string eventImageUrl;
@@ -45,9 +47,10 @@ interface IHighV {
 
     enum EventStatus {
         NULL,
-        START,
+        STARTED,
         CANCELLED,
         POSTPONED,
+        PAUSED,
         ENDED
     }
 
@@ -57,49 +60,67 @@ interface IHighV {
         PAID
     }
 
+    //2
     function getEventInfo() external view returns (IHighV.Event memory);
 
+    //3
     function getCreator() external view returns (address);
 
-    function getAllAttendees()
-        external
-        view
-        returns (IHighV.Registrant[] memory);
-
+    //4
+    //register for event
     function register4Event(address _user, string memory _email) external;
 
+    //5
     function getRegistrant(address _user)
         external
         view
         returns (IHighV.Registrant memory);
 
+    //6
     function getAllRegistrant()
         external
         view
         returns (IHighV.Registrant[] memory);
 
+    //7
+    function getAllAttendees()
+        external
+        view
+        returns (IHighV.Registrant[] memory);
+
+    //8
     function markAttendance(address _user) external;
 
-    function updateVenue(address _user, string memory _venue) external;
+    //9
+    function updateVenue(address _creator, string memory _venue) external;
 
-    function updateCreatorEmail(address _user, string memory _creatorEmail)
+    //10
+    function updateCreatorEmail(address _creator, string memory _creatorEmail)
         external;
 
+    //11
+    function updateEventImageUrl(address _creator, string memory _eventImageUrl)
+        external;
+
+    //12
+    function updateEventPrice(address _creator, uint256 _price) external;
+
+    //13
+    function openOrCloseRegistration(address _creator) external;
+
+    //14
+    function startEvent(address _creator) external;
+
+    //15 special attendees
+    function whitelistUser(address _creator, address[] memory _user)
+        external
+        returns (bool);
+
+    //16
     function updateCreatorPhoneNumber(
-        address _user,
+        address _creator,
         string memory _creatorPhoneNumber
     ) external;
-
-    function updateEventImageUrl(address _user, string memory _eventImageUrl)
-        external;
-
-    function updateEventPrice(address _user, uint256 _price) external;
-
-    function openOrCloseRegistration(address _user) external;
-
-    function startOrEndEvent(address _user) external;
-
-    function whitelistUser(address _creator, address[] memory _user) external;
 
     //17
     function endEvent(address _creator) external;
@@ -113,29 +134,32 @@ interface IHighV {
     //20
     function claimPOAP(address _attendee) external;
 
-    //21
+    //21 types could be speaker, vip, volunteers, etc
     function addUserTypes(address _creator, string[] memory _userTypes)
-        external;
+        external
+        returns (bool);
 
     //22
     function getAllUserTypes() external view returns (string[] memory);
 
-    //23
     function addTypeToUsers(
         address _creator,
         address[] memory _users,
         string memory _userType
-    ) external;
+    ) external returns (bool);
+
+    //24
+    function pauseEvent(address _creator) external;
 
     //=============== NFT CONTRACT ========================
-    function mint(
-        address recipient,
-        uint256 nftId,
-        uint256 quantity
-    ) external;
+    function mint(address recipient, uint256 nftId) external;
 
     //=============== ERC20 CONTRACT ========================
     function balanceOf(address account) external view returns (uint256);
-    
-    function transferFrom(address from, address to, uint256 value) external returns (bool);
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 value
+    ) external returns (bool);
 }
