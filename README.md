@@ -18,11 +18,11 @@ After cloning the project on Github, do the following to get the code running on
 # Interraction
 
 ## HighVFactory
-  - [0x6f4AffD4FABbbd742533109b3b9FD1E7Fcc93aa6](https://sepolia.etherscan.io/address/0x6f4AffD4FABbbd742533109b3b9FD1E7Fcc93aa6#code)
+  - Verified: [0x6f4AffD4FABbbd742533109b3b9FD1E7Fcc93aa6](https://sepolia.etherscan.io/address/0x6f4AffD4FABbbd742533109b3b9FD1E7Fcc93aa6#code)
 
 
 ## HighVPay (In case you need an ERC20 contract for payment for your event)
-- [0xd727e7aF56EF80180098617239Fd9d7F8961B8b1](https://sepolia.etherscan.io/address/0xd727e7aF56EF80180098617239Fd9d7F8961B8b1#code)
+- Verified: [0xd727e7aF56EF80180098617239Fd9d7F8961B8b1](https://sepolia.etherscan.io/address/0xd727e7aF56EF80180098617239Fd9d7F8961B8b1#code)
 
 ## Authors
 Michael Dean Oyewole
