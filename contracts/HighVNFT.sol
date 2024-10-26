@@ -16,7 +16,11 @@ contract HighVNFT is ERC1155Burnable, Ownable {
         Ownable(_owner)
     {
         nftURI = string(
-            abi.encodePacked("https://ipfs.io/ipfs/", _nftURI, "/")
+            bytes.concat(
+                bytes("https://ipfs.io/ipfs/"),
+                bytes(_nftURI),
+                bytes("/")
+            )
         );
     }
 
@@ -28,7 +32,7 @@ contract HighVNFT is ERC1155Burnable, Ownable {
         return uri(0);
     }
 
-    function uri(uint256 _tokenid)
+    function uri(uint256 _tokenId)
         public
         view
         override
@@ -36,7 +40,11 @@ contract HighVNFT is ERC1155Burnable, Ownable {
     {
         return
             string(
-                abi.encodePacked(nftURI, Strings.toString(_tokenid), ".json")
+                bytes.concat(
+                    bytes(nftURI),
+                    bytes(Strings.toString(_tokenId)),
+                    bytes(".json")
+                )
             );
     }
 

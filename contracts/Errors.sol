@@ -7,7 +7,7 @@ contract Errors {
     error NFT_NOT_TRANSFERABLE();
     error INELLIGIBLE(address);
     error EVENT_NOT_ENDED();
-    error INSUFFICIENT_BALANCE(uint256);
+    error INSUFFICIENT_ALLOWANCE(uint256);
     error TRANSFER_FAIL();
     error REG_IS_NOT_ON();
     error EVENT_STATUS_ERROR();
@@ -19,4 +19,5 @@ contract Errors {
     error CANNOT_START_EVENT();
     error CANNOT_POSTPONE_EVENT();
     error CANNOT_PAUSE_EVENT();
+    error WHEN_EVENT_ENDS();
 }

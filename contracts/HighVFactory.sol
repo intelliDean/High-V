@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./HighV.sol";
-import "./IHighV.sol";
-import "./HighVNFT.sol";
+// import "./HighV.sol";
+// import "./IHighV.sol";
+// import "./HighVNFT.sol";
 import "./HighVFactoryLib.sol";
 import "./DeploymentLib.sol";
 
@@ -28,7 +28,18 @@ contract HighVFactory {
         uint256 NFT_Type
     );
 
-    constructor(address _owner, address _creatorNFT) {
+    event Registered(address indexed user, bytes32 indexed eventId);
+    event Attendance(address indexed user, bytes32 indexed eventId);
+    event UpdatePrice(bytes32 indexed eventId, uint256 indexed _price);
+    event Updated(
+        bytes32 indexed eventId,
+        string indexed fieldUpdated,
+        string indexed update
+    );
+
+    event Result(bytes32 indexed _eventId, bool result);
+
+    constructor(address payable _owner, address _creatorNFT) payable {
         if (_owner == address(0) && _creatorNFT == address(0))
             revert Errors.ADDRESS_ZERO();
         owner = _owner;
@@ -41,13 +52,15 @@ contract HighVFactory {
         address _paymentAddress,
         IHighV.EventData memory _eventData
     ) external {
-        bytes32 _eventId = keccak256(abi.encode(msg.sender, _eventData));
+        address _creator = msg.sender;
 
-        address nft = DeploymentLib._deployNFTContract(_nftURI, msg.sender);
+        bytes32 _eventId = keccak256(abi.encode(_creator, _eventData));
+
+        address nft = DeploymentLib._deployNFTContract(_nftURI, _creator);
 
         address highV = DeploymentLib._deployHighVContract(
             _eventData,
-            msg.sender,
+            _creator,
             _paymentAddress,
             nft,
             _eventId
@@ -57,15 +70,13 @@ contract HighVFactory {
 
         eventsAddresses[_eventId] = highV;
 
-        emit FactoryCreatedEvent(msg.sender, _eventId);
+        emit FactoryCreatedEvent(_creator, _eventId);
     }
 
     //2
-    function getEventDetails(bytes32 _eventId)
-        public
-        view
-        returns (IHighV.Event memory)
-    {
+    function getEventDetails(
+        bytes32 _eventId
+    ) public view returns (IHighV.Event memory) {
         return eventsAddresses._getEventDetails(_eventId);
     }
 
@@ -75,63 +86,71 @@ contract HighVFactory {
     }
 
     //4
-    function userRegister4Event(bytes32 _eventId, string memory _email)
-        external
-    {
-        eventsAddresses._userRegister4Event(_eventId, msg.sender, _email);
+    function userRegister4Event(
+        bytes32 _eventId,
+        string memory _email
+    ) external {
+        address _registrant = msg.sender;
+        eventsAddresses._userRegister4Event(_eventId, _registrant, _email);
+        emit Registered(_registrant, _eventId);
     }
 
     //5
-    function getEventRegistrant(bytes32 _eventId, address _user)
-        external
-        view
-        returns (IHighV.Registrant memory)
-    {
+    function getEventRegistrant(
+        bytes32 _eventId,
+        address _user
+    ) external view returns (IHighV.Registrant memory) {
         return eventsAddresses._getEventRegistrant(_eventId, _user);
     }
 
     //6
-    function getAllEventRegistrants(bytes32 _eventId)
-        external
-        view
-        returns (IHighV.Registrant[] memory)
-    {
+    function getAllEventRegistrants(
+        bytes32 _eventId
+    ) external view returns (IHighV.Registrant[] memory) {
         return eventsAddresses._getAllEventRegistrants(_eventId);
     }
 
     //7
-    function getAllEventAttendees(bytes32 _eventId)
-        external
-        view
-        returns (IHighV.Registrant[] memory)
-    {
+    function getAllEventAttendees(
+        bytes32 _eventId
+    ) external view returns (IHighV.Registrant[] memory) {
         return eventsAddresses._getAllEventAttendees(_eventId);
     }
 
     //8
     //this will be done with user scanning QR code
-    function userMarkAttendance(bytes32 _eventId, address _user) external {
+    function userMarkAttendance(
+        bytes32 _eventId,
+        address _user
+    ) external {
         eventsAddresses._userMarkAttendance(_eventId, _user);
+        emit Attendance(_user, _eventId);
     }
 
     //["Base Event", "dean@gmail.com", "08095729090", "image.com", "Base event for base developers", "The Zone, Gbagada", [[433973097539, 4339730973475, 4339730973900]], "DeFi", 0]
 
     //9
-    function creatorUpdateVenue(bytes32 _eventId, string memory _venue)
-        external
-    {
+    function creatorUpdateVenue(
+        bytes32 _eventId,
+        string memory _venue
+    ) external {
         eventsAddresses._creatorUpdateVenue(_eventId, msg.sender, _venue);
+
+        emit Updated(_eventId, "Venue", _venue);
     }
 
     //10
-    function creatorUpdateEmail(bytes32 _eventId, string memory _creatorEmail)
-        external
-    {
+    function creatorUpdateEmail(
+        bytes32 _eventId,
+        string memory _creatorEmail
+    ) external {
         eventsAddresses._creatorUpdateEmail(
             _eventId,
             msg.sender,
             _creatorEmail
         );
+
+        emit Updated(_eventId, "Email", _creatorEmail);
     }
 
     //11
@@ -144,11 +163,14 @@ contract HighVFactory {
             msg.sender,
             _eventImageUrl
         );
+        emit Updated(_eventId, "ImageUrl", _eventImageUrl);
     }
 
     //12
     function updateEventPrice(bytes32 _eventId, uint256 _price) external {
         eventsAddresses._updateEventPrice(_eventId, msg.sender, _price);
+
+        emit UpdatePrice(_eventId, _price);
     }
 
     //13
@@ -162,12 +184,12 @@ contract HighVFactory {
     }
 
     //15
-    function creatorWhitelistUsers(bytes32 _eventId, address[] memory _user)
-        external
-        returns (bool)
-    {
-        return
-            eventsAddresses._creatorWhitelistUsers(_eventId, msg.sender, _user);
+    function creatorWhitelistUsers(
+        bytes32 _eventId,
+        address[] memory _user
+    ) external {
+        if (eventsAddresses._creatorWhitelistUsers(_eventId, msg.sender, _user))
+            emit Result(_eventId, true);
     }
 
     //16
@@ -180,6 +202,8 @@ contract HighVFactory {
             msg.sender,
             _creatorPhoneNumber
         );
+
+        emit Updated(_eventId, "Phone Number", _creatorPhoneNumber);
     }
 
     //17
@@ -203,24 +227,28 @@ contract HighVFactory {
     }
 
     //21
-    function creatorAddUserTypes(bytes32 _eventId, string[] memory _userTypes)
-        external
-        returns (bool)
-    {
-        return
+    function creatorAddUserTypes(
+        bytes32 _eventId,
+        string[] memory _userTypes
+    ) external {
+        if (
             eventsAddresses._creatorAddUserTypes(
                 _eventId,
                 msg.sender,
                 _userTypes
-            );
+            )
+        ) emit Result(_eventId, true);
+    }
+
+    receive() external payable {
+        (bool success, ) = owner.call{value: msg.value}("");
+        if (!success) revert Errors.TRANSFER_FAIL();
     }
 
     //22
-    function allUserTypes(bytes32 _eventId)
-        external
-        view
-        returns (string[] memory)
-    {
+    function allUserTypes(
+        bytes32 _eventId
+    ) external view returns (string[] memory) {
         return eventsAddresses._allUserTypes(_eventId);
     }
 
@@ -229,14 +257,15 @@ contract HighVFactory {
         bytes32 _eventId,
         address[] memory _users,
         string memory _userType
-    ) external returns (bool) {
-        return
+    ) external {
+        if (
             eventsAddresses._creatorAddTypeToUsers(
                 _eventId,
                 msg.sender,
                 _users,
                 _userType
-            );
+            )
+        ) emit Result(_eventId, true);
     }
 
     //24
@@ -245,6 +274,13 @@ contract HighVFactory {
     }
 
     //25
+    function getEventStatus(
+        bytes32 _eventId
+    ) public view returns (IHighV.EventStatus) {
+        return eventsAddresses._getEventStatus(_eventId);
+    }
+
+    //26
     function getAllEventDetails()
         external
         view
@@ -253,14 +289,21 @@ contract HighVFactory {
         return allEvents._getAllEventDetails();
     }
 
-    //26
+    //27
     function creatorClaimEventNFT(bytes32 _eventId) external {
+        address _creator = msg.sender;
         HighVFactoryLib._creatorClaimEventNFT(
             eventsAddresses,
-            msg.sender,
+            _creator,
             creatorNFT,
             _eventId
         );
-        emit CreatorClaimEventNFT(msg.sender, _eventId, 1);
+        emit CreatorClaimEventNFT(_creator, _eventId, 1);
+    }
+
+    function creatorWithdrawLockedEther(
+        bytes32 _eventId
+    ) external payable returns (bool) {
+        return eventsAddresses._creatorWithdrawLockedEther(_eventId);
     }
 }

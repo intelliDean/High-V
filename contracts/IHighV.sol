@@ -41,7 +41,7 @@ interface IHighV {
     struct Registrant {
         address regAddress;
         string email;
-        uint8 regType;
+        uint256 regType;
         bool attended;
     }
 
@@ -151,11 +151,20 @@ interface IHighV {
     //24
     function pauseEvent(address _creator) external;
 
+    //25
+    function getEventStatus() external view returns (IHighV.EventStatus);
+
+    function withdrawLockedEther() external payable returns (bool);
+
     //=============== NFT CONTRACT ========================
+
     function mint(address recipient, uint256 nftId) external;
 
     //=============== ERC20 CONTRACT ========================
+
     function balanceOf(address account) external view returns (uint256);
+
+    function allowance(address owner, address spender) external view returns (uint256);
 
     function transferFrom(
         address from,

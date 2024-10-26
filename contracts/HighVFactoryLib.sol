@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import "./IHighV.sol";
-import "./HighV.sol";
-import "./HighVNFT.sol";
+// import "./HighV.sol";
+// import "./HighVNFT.sol";
 import "./Errors.sol";
 
 library HighVFactoryLib {
@@ -258,7 +258,21 @@ library HighVFactoryLib {
         _initiateContract(eventsAddresses, _eventId).pauseEvent(_user);
     }
 
-    //25
+        //25
+    function _getEventStatus(
+        mapping(bytes32 => address) storage eventsAddresses,
+        bytes32 _eventId
+    ) public view returns (IHighV.EventStatus) {
+        return _initiateContract(eventsAddresses, _eventId).getEventStatus();
+    }
+
+    //26
+    function _creatorWithdrawLockedEther(
+        mapping(bytes32 => address) storage eventsAddresses,
+        bytes32 _eventId) public returns (bool) {
+        return _initiateContract(eventsAddresses, _eventId).withdrawLockedEther();
+    }
+
     function _getAllEventDetails(address[] storage allEvents)
         public
         view
@@ -267,12 +281,14 @@ library HighVFactoryLib {
         uint256 _length = allEvents.length;
         _allEventDetails = new IHighV.Event[](_length);
 
-        for (uint256 i = 0; i < _length; ++i) {
+        for (uint256 i = 0; i < _length; ) {
             _allEventDetails[i] = IHighV(allEvents[i]).getEventInfo();
+            unchecked {
+                ++i; // increment without overflow check
+            }
         }
     }
 
-    //26
     function _creatorClaimEventNFT(
         mapping(bytes32 => address) storage eventsAddresses,
         address _caller,
@@ -284,12 +300,16 @@ library HighVFactoryLib {
             _eventId
         );
         if (
-            _caller == _event.creator &&
-            _event.eventStatus == IHighV.EventStatus.ENDED
-        ) {
-            _creatorNFT.mint(_event.creator, 1);
-        } else {
-            revert Errors.INELLIGIBLE(_caller);
-        }
+            _caller != _event.creator
+        ) revert Errors.INELLIGIBLE(_caller);
+
+         if (
+            _event.eventStatus != IHighV.EventStatus.ENDED
+        ) revert Errors.WHEN_EVENT_ENDS();
+
+        _creatorNFT.mint(_event.creator, 1);
     }
+
+
 }
+

@@ -9,9 +9,11 @@ library HighVLib {
     function _createEvent(
         IHighV.Event storage eventDetails,
         IHighV.EventData memory _eventData,
+        address _creator,
         bytes32 _eventId
     ) internal {
         eventDetails.eventId = _eventId;
+        eventDetails.creator = _creator;
         eventDetails.creatorPhoneNumber = _eventData.creatorPhone;
         eventDetails.creatorEmail = _eventData.creatorEmail;
         eventDetails.eventImageUrl = _eventData.eventImageUrl;
@@ -25,26 +27,27 @@ library HighVLib {
             : IHighV.EventType.FREE;
         eventDetails.createdAt = block.timestamp;
 
-        for (uint256 i = 0; i < _eventData.dateTime.length; i++) {
+        uint _length = _eventData.dateTime.length;
+
+        for (uint256 i = 0; i < _length; ) {
             eventDetails.dateTime.push(_eventData.dateTime[i]);
+            unchecked {
+                ++i; // increment without overflow check
+            }
         }
     }
 
     //2
-    function _getEventInfo(IHighV.Event storage eventDetails)
-        internal
-        pure
-        returns (IHighV.Event memory)
-    {
+    function _getEventInfo(
+        IHighV.Event storage eventDetails
+    ) internal pure returns (IHighV.Event memory) {
         return eventDetails;
     }
 
     //3
-    function _getCreator(IHighV.Event storage eventDetails)
-        internal
-        view
-        returns (address)
-    {
+    function _getCreator(
+        IHighV.Event storage eventDetails
+    ) internal view returns (address) {
         return eventDetails.creator;
     }
 
@@ -64,11 +67,11 @@ library HighVLib {
         if (isWhitelisted[_user]) {
             _addRegistrant(registrants, allAttendees, _user, _email);
         } else if (eventDetails.eventType == IHighV.EventType.PAID) {
-            uint256 _userBalance = PAYMENT.balanceOf(_user);
+            uint256 _allowance = PAYMENT.allowance(_user, _contractAddress);
             uint256 _eventPrice = eventDetails.price;
 
-            if (_userBalance < _eventPrice)
-                revert Errors.INSUFFICIENT_BALANCE(_userBalance);
+            if (_allowance < _eventPrice)
+                revert Errors.INSUFFICIENT_ALLOWANCE(_allowance);
 
             //if the event is paid, the user would first approve the contract to spend the event amount on his behalf
             if (!PAYMENT.transferFrom(_user, _contractAddress, _eventPrice))
@@ -113,8 +116,13 @@ library HighVLib {
     ) internal view returns (IHighV.Registrant[] memory _allRegistrants) {
         _allRegistrants = new IHighV.Registrant[](allAttendees.length);
 
-        for (uint256 i = 0; i < allAttendees.length; ++i) {
+        uint _length = allAttendees.length;
+
+        for (uint256 i = 0; i < _length; ) {
             _allRegistrants[i] = registrants[allAttendees[i]];
+            unchecked {
+                ++i; // increment without overflow check
+            }
         }
     }
 
@@ -124,12 +132,16 @@ library HighVLib {
         address[] storage allAttendees
     ) internal view returns (IHighV.Registrant[] memory _allAttendees) {
         uint256 count = 0;
+
         uint256 _length = allAttendees.length;
 
         //i first get the number of atendees
-        for (uint256 i = 0; i < _length; ++i) {
+        for (uint256 i = 0; i < _length; ) {
             if (registrants[allAttendees[i]].attended) {
                 count++;
+            }
+            unchecked {
+                ++i; // increment without overflow check
             }
         }
 
@@ -141,7 +153,13 @@ library HighVLib {
         for (uint256 i = 0; i < _length; ++i) {
             if (registrants[allAttendees[i]].attended) {
                 _allAttendees[index] = registrants[allAttendees[i]];
-                index++;
+
+                unchecked {
+                    ++index;
+                }
+            }
+            unchecked {
+                ++i; // increment without overflow check
             }
         }
     }
@@ -152,13 +170,17 @@ library HighVLib {
         IHighV.Event storage eventDetails,
         mapping(address => IHighV.Registrant) storage registrants,
         address _user
-    ) internal {
+    ) internal checkStarted(eventDetails) {
         if (registrants[_user].regAddress == address(0))
             revert Errors.NOT_REGISTERED(_user);
-        if (eventDetails.eventStatus != IHighV.EventStatus.STARTED)
-            revert Errors.EVENT_STATUS_ERROR();
 
         registrants[_user].attended = true;
+    }
+
+    modifier checkStarted(IHighV.Event storage eventDetails) {
+        if (eventDetails.eventStatus != IHighV.EventStatus.STARTED)
+            revert Errors.EVENT_STATUS_ERROR();
+        _;
     }
 
     //9
@@ -199,25 +221,30 @@ library HighVLib {
     }
 
     //13
-    function _openOrCloseRegistration(IHighV.Event storage eventDetails)
-        internal
-    {
+    function _openOrCloseRegistration(
+        IHighV.Event storage eventDetails
+    ) internal returns (bytes32) {
         if (
             eventDetails.eventStatus == IHighV.EventStatus.CANCELLED ||
             eventDetails.eventStatus == IHighV.EventStatus.ENDED
         ) revert Errors.EVENT_STATUS_ERROR();
 
         eventDetails.regIsOn = !eventDetails.regIsOn;
+        return eventDetails.eventId;
     }
 
     //14
-    function _startEvent(IHighV.Event storage eventDetails) internal {
+    function _startEvent(
+        IHighV.Event storage eventDetails
+    ) internal returns (bytes32) {
         if (
             eventDetails.eventStatus != IHighV.EventStatus.NULL ||
             eventDetails.eventStatus != IHighV.EventStatus.POSTPONED ||
             eventDetails.eventStatus != IHighV.EventStatus.PAUSED
         ) revert Errors.CANNOT_START_EVENT();
         eventDetails.eventStatus = IHighV.EventStatus.STARTED;
+
+        return eventDetails.eventId;
     }
 
     //15
@@ -227,10 +254,15 @@ library HighVLib {
     ) internal returns (bool) {
         if (_user.length == 0) revert Errors.ZERO_ARRAY_LENGTH();
 
-        for (uint256 i = 0; i < _user.length; ++i) {
+        uint _length = _user.length;
+
+        for (uint256 i = 0; i < _length; ) {
             //do not whitelist address(0)
             if (_user[i] != address(0)) {
                 isWhitelisted[_user[i]] = true;
+            }
+            unchecked {
+                ++i; // increment without overflow check
             }
         }
 
@@ -246,29 +278,37 @@ library HighVLib {
     }
 
     //17
-    function _endEvent(IHighV.Event storage eventDetails) internal {
-        if (
-            eventDetails.eventStatus != IHighV.EventStatus.STARTED ||
-            eventDetails.eventStatus != IHighV.EventStatus.PAUSED
-        ) revert Errors.CANNOT_END_EVENT();
+    function _endEvent(
+        IHighV.Event storage eventDetails
+    ) internal checkStarted(eventDetails) returns (bytes32) {
+        if (eventDetails.eventStatus != IHighV.EventStatus.PAUSED)
+            revert Errors.CANNOT_END_EVENT();
+
         eventDetails.eventStatus = IHighV.EventStatus.ENDED;
+        return eventDetails.eventId;
     }
 
     //18
-    function _cancelEvent(IHighV.Event storage eventDetails) internal {
+    function _cancelEvent(
+        IHighV.Event storage eventDetails
+    ) internal returns (bytes32) {
         if (
             eventDetails.eventStatus != IHighV.EventStatus.NULL ||
             eventDetails.eventStatus != IHighV.EventStatus.POSTPONED
         ) revert Errors.CANNOT_CANCEL_EVENT();
         eventDetails.eventStatus = IHighV.EventStatus.CANCELLED;
+        return eventDetails.eventId;
     }
 
     //19
-    function _postponeEvent(IHighV.Event storage eventDetails) internal {
+    function _postponeEvent(
+        IHighV.Event storage eventDetails
+    ) internal returns (bytes32) {
         if (eventDetails.eventStatus != IHighV.EventStatus.NULL)
             revert Errors.CANNOT_POSTPONE_EVENT();
 
         eventDetails.eventStatus = IHighV.EventStatus.POSTPONED;
+        return eventDetails.eventId;
     }
 
     //20
@@ -281,10 +321,7 @@ library HighVLib {
         if (eventDetails.eventStatus != IHighV.EventStatus.ENDED)
             revert Errors.EVENT_NOT_ENDED();
 
-        IHighV.Registrant memory _registrant = _getRegistrant(
-            registrants,
-            _attendee
-        );
+        IHighV.Registrant memory _registrant = registrants[_attendee];
 
         if (_registrant.attended) {
             //minting of the POAP NFT
@@ -297,49 +334,75 @@ library HighVLib {
 
     //21
     function _addUserTypes(
-        mapping(string => uint8) storage userType,
+        mapping(string => uint256) storage userType,
         string[] storage allUserTypes,
         string[] memory _userTypes
     ) internal returns (bool) {
         if (_userTypes.length == 0) revert Errors.ZERO_ARRAY_LENGTH();
 
-        for (uint8 i = 0; i < _userTypes.length; ++i) {
+        uint _length = _userTypes.length;
+
+        for (uint256 i = 0; i < _length; ) {
             userType[_userTypes[i]] = i + 1;
             allUserTypes.push(_userTypes[i]);
+
+            unchecked {
+                ++i; // increment without overflow check
+            }
         }
 
         return true;
     }
 
     //22
-    function _getAllUserTypes(string[] storage allUserTypes)
-        internal
-        pure
-        returns (string[] memory)
-    {
+    function _getAllUserTypes(
+        string[] storage allUserTypes
+    ) internal pure returns (string[] memory) {
         return allUserTypes;
     }
 
     //23
     function _addTypeToUsers(
         mapping(address => IHighV.Registrant) storage registrants,
-        mapping(string => uint8) storage userType,
+        mapping(string => uint256) storage userType,
         address[] memory _users,
         string memory _userType
     ) internal returns (bool) {
         if (_users.length == 0) revert Errors.ZERO_ARRAY_LENGTH();
 
-        for (uint256 i = 0; i < _users.length; ++i) {
+        uint _length = _users.length;
+
+        for (uint256 i = 0; i < _length; ) {
             registrants[_users[i]].regType = userType[_userType];
+
+            unchecked {
+                ++i; // increment without overflow check
+            }
         }
 
         return true;
     }
 
     //24
-    function _pauseEvent(IHighV.Event storage eventDetails) internal {
-        if (eventDetails.eventStatus != IHighV.EventStatus.STARTED)
-            revert Errors.CANNOT_PAUSE_EVENT();
+    function _pauseEvent(
+        IHighV.Event storage eventDetails
+    ) internal checkStarted(eventDetails) {
         eventDetails.eventStatus = IHighV.EventStatus.PAUSED;
+    }
+
+    //25
+    function _getEventStatus(
+        IHighV.Event storage eventDetails
+    ) internal view returns (IHighV.EventStatus) {
+        return eventDetails.eventStatus;
+    }
+
+    //26
+    function _withdrawLockedEther(
+        IHighV.Event storage eventDetails
+    ) internal returns (bool) {
+        (bool success, ) = eventDetails.creator.call{value: msg.value}("");
+        if (!success) revert Errors.TRANSFER_FAIL();
+        return success;
     }
 }

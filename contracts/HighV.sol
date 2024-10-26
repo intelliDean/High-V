@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./IHighV.sol";
+// import "./IHighV.sol";
 import "./HighVLib.sol";
-import "./Errors.sol";
-import "./HighVNFT.sol";
+// import "./Errors.sol";
+// import "./HighVNFT.sol";
 
 contract HighV {
     using HighVLib for *;
 
-    IHighV HIGHVNFT;
-    IHighV PAYMENT;
+    IHighV immutable HIGHVNFT;
+    IHighV immutable PAYMENT;
 
     IHighV.Event eventDetails;
 
@@ -19,27 +19,21 @@ contract HighV {
 
     mapping(address => IHighV.Registrant) public registrants;
     mapping(address => bool) public isWhitelisted;
-    mapping(string => uint8) public userType;
+    // mapping(string => uint256) public userType;
+    mapping(string => uint256) public userType;
 
     event ContractCreated(
         address indexed contractAddress,
         address indexed nftContract,
         address indexed paymentAddress
     );
-    event Registered(address indexed user, bytes32 indexed eventId);
-    event Attendance(address indexed user, bytes32 indexed eventId);
-    event UpdatePrice(bytes32 indexed eventId, uint256 indexed _price);
-    event Updated(
-        bytes32 indexed eventId,
-        string indexed fieldUpdated,
-        string indexed update
-    );
+
     event RegStatus(bytes32 indexed eventId, bool regStatus);
     event EventStatus(bytes32 indexed eventId, IHighV.EventStatus eventStatus);
     event ClaimPOAP(
         bytes32 indexed eventId,
         address indexed _attendee,
-        uint8 indexed POAP_Type
+        uint256 indexed POAP_Type
     );
 
     constructor(
@@ -49,14 +43,12 @@ contract HighV {
         IHighV.EventData memory _eventData,
         bytes32 _eventId
     ) {
-        eventDetails.creator = _creator;
-
         //NFT Contract
         HIGHVNFT = IHighV(nftContract);
         PAYMENT = IHighV(_paymentAddress);
 
         //1
-        eventDetails._createEvent(_eventData, _eventId);
+        eventDetails._createEvent(_eventData, _creator, _eventId);
 
         emit ContractCreated(address(this), nftContract, _paymentAddress);
     }
@@ -98,8 +90,6 @@ contract HighV {
             address(this),
             _email
         );
-
-        emit Registered(_user, eventDetails.eventId);
     }
 
     //5
@@ -132,65 +122,59 @@ contract HighV {
     //8
     function markAttendance(address _user) external addressZeroCheck(_user) {
         HighVLib._markAttendance(eventDetails, registrants, _user);
-
-        emit Attendance(_user, eventDetails.eventId);
     }
 
     //9
     function updateVenue(address _creator, string memory _venue)
-        external
+        external payable 
         onlyOwner(_creator)
     {
         eventDetails._updateVenue(_venue);
-        emit Updated(eventDetails.eventId, "Venue", _venue);
     }
 
     //10
     function updateCreatorEmail(address _creator, string memory _creatorEmail)
-        external
+        external payable
         onlyOwner(_creator)
     {
         eventDetails._updateCreatorEmail(_creatorEmail);
-        emit Updated(eventDetails.eventId, "Email", _creatorEmail);
     }
 
     //11
     function updateEventImageUrl(address _creator, string memory _eventImageUrl)
-        external
+        external payable
         onlyOwner(_creator)
     {
         eventDetails._updateEventImageUrl(_eventImageUrl);
-        emit Updated(eventDetails.eventId, "Image", _eventImageUrl);
     }
 
     //12
     function updateEventPrice(address _creator, uint256 _price)
-        external
+        external payable
         onlyOwner(_creator)
     {
         eventDetails._updateEventPrice(_price);
-        emit UpdatePrice(eventDetails.eventId, _price);
     }
 
     //13
     function openOrCloseRegistration(address _creator)
-        external
+        external payable
         onlyOwner(_creator)
     {
-        eventDetails._openOrCloseRegistration();
+        bytes32 _eventId = eventDetails._openOrCloseRegistration();
 
-        emit RegStatus(eventDetails.eventId, eventDetails.regIsOn);
+        emit RegStatus(_eventId, eventDetails.regIsOn);
     }
 
     //14
-    function startEvent(address _creator) external onlyOwner(_creator) {
-        eventDetails._startEvent();
-        emit EventStatus(eventDetails.eventId, eventDetails.eventStatus);
+    function startEvent(address _creator) external payable onlyOwner(_creator) {
+        bytes32 _eventId = eventDetails._startEvent();
+        emit EventStatus(_eventId, eventDetails.eventStatus);
     }
 
     //15 special attendees
     function whitelistUser(address _creator, address[] memory _user)
-        external
+        external payable
         onlyOwner(_creator)
         returns (bool)
     {
@@ -201,27 +185,26 @@ contract HighV {
     function updateCreatorPhoneNumber(
         address _creator,
         string memory _creatorPhoneNumber
-    ) external onlyOwner(_creator) {
+    ) external payable onlyOwner(_creator) {
         eventDetails._updateCreatorPhoneNumber(_creatorPhoneNumber);
-        emit Updated(eventDetails.eventId, "Phone Number", _creatorPhoneNumber);
     }
 
     //17
-    function endEvent(address _creator) external onlyOwner(_creator) {
-        eventDetails._endEvent();
-        emit EventStatus(eventDetails.eventId, eventDetails.eventStatus);
+    function endEvent(address _creator) external payable onlyOwner(_creator) {
+        bytes32 _eventId = eventDetails._endEvent();
+        emit EventStatus(_eventId, eventDetails.eventStatus);
     }
 
     //18
-    function cancelEvent(address _creator) external onlyOwner(_creator) {
-        eventDetails._cancelEvent();
-        emit EventStatus(eventDetails.eventId, eventDetails.eventStatus);
+    function cancelEvent(address _creator) external payable onlyOwner(_creator) {
+        bytes32 _eventId = eventDetails._cancelEvent();
+        emit EventStatus(_eventId, eventDetails.eventStatus);
     }
 
     //19
-    function postponeEvent(address _creator) external onlyOwner(_creator) {
-        eventDetails._postponeEvent();
-        emit EventStatus(eventDetails.eventId, eventDetails.eventStatus);
+    function postponeEvent(address _creator) external payable onlyOwner(_creator) {
+        bytes32 _eventId = eventDetails._postponeEvent();
+        emit EventStatus(_eventId, eventDetails.eventStatus);
     }
 
     //20
@@ -236,7 +219,7 @@ contract HighV {
 
     //21 types could be speaker, vip, volunteers, etc
     function addUserTypes(address _creator, string[] memory _userTypes)
-        external
+        external payable
         onlyOwner(_creator)
         returns (bool)
     {
@@ -255,14 +238,23 @@ contract HighV {
         address _creator,
         address[] memory _users,
         string memory _userType
-    ) external onlyOwner(_creator) returns (bool) {
+    ) external payable onlyOwner(_creator) returns (bool) {
         return
             HighVLib._addTypeToUsers(registrants, userType, _users, _userType);
     }
 
     //24
-    function pauseEvent(address _creator) external onlyOwner(_creator) {
+    function pauseEvent(address _creator) external payable onlyOwner(_creator) {
         eventDetails._pauseEvent();
         emit EventStatus(eventDetails.eventId, eventDetails.eventStatus);
+    }
+
+    //25
+    function getEventStatus() public view returns (IHighV.EventStatus) {
+        return eventDetails._getEventStatus();
+    }
+
+    function withdrawLockedEther() external payable returns (bool) {
+        return eventDetails._withdrawLockedEther();
     }
 }
