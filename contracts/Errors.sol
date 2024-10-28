@@ -20,4 +20,5 @@ contract Errors {
     error CANNOT_POSTPONE_EVENT();
     error CANNOT_PAUSE_EVENT();
     error WHEN_EVENT_ENDS();
+    error ALREADY_CLAIMED();
 }

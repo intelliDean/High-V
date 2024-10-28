@@ -295,6 +295,10 @@ library HighVFactoryLib {
         IHighV _creatorNFT,
         bytes32 _eventId
     ) public {
+
+        if (_initiateContract(eventsAddresses, _eventId).hasClaimed())
+            revert Errors.ALREADY_CLAIMED();
+
         IHighV.Event memory _event = _getEventDetails(
             eventsAddresses,
             _eventId
@@ -307,9 +311,9 @@ library HighVFactoryLib {
             _event.eventStatus != IHighV.EventStatus.ENDED
         ) revert Errors.WHEN_EVENT_ENDS();
 
+        _initiateContract(eventsAddresses, _eventId).setClaim();
+
         _creatorNFT.mint(_event.creator, 1);
     }
-
-
 }
 

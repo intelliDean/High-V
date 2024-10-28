@@ -12,6 +12,8 @@ contract HighV {
     IHighV immutable HIGHVNFT;
     IHighV immutable PAYMENT;
 
+    bool claimed;
+
     IHighV.Event eventDetails;
 
     address[] allAttendees;
@@ -256,5 +258,13 @@ contract HighV {
 
     function withdrawLockedEther() external returns (bool) {
         return eventDetails._withdrawLockedEther();
+    }
+
+    function hasClaimed() external view returns (bool)  {
+        return claimed._hasClaimed();
+    }
+
+    function setClaim() external view {
+        claimed._setClaim();
     }
 }

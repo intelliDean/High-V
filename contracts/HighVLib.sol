@@ -335,6 +335,10 @@ library HighVLib {
 
         IHighV.Registrant memory _registrant = registrants[_attendee];
 
+        if (
+            HIGHVNFT.balanceOf(_registrant.regAddress, _registrant.regType) != 0
+        ) revert Errors.ALREADY_CLAIMED();
+
         if (_registrant.attended) {
             //minting of the POAP NFT
             HIGHVNFT.mint(_registrant.regAddress, _registrant.regType);
@@ -423,4 +427,14 @@ library HighVLib {
         if (!success) revert Errors.TRANSFER_FAIL();
         return success;
     }
+
+    function _hasClaimed(bool claimed) internal pure returns (bool) {
+        return claimed;
+    }
+
+    function _setClaim(bool claimed) internal pure {
+        claimed = true;
+    }
+
+    
 }

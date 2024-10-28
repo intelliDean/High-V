@@ -156,9 +156,15 @@ interface IHighV {
 
     function withdrawLockedEther() external payable returns (bool);
 
+    function hasClaimed() external view returns (bool);
+
+    function setClaim() external view;
+
     //=============== NFT CONTRACT ========================
 
     function mint(address recipient, uint256 nftId) external;
+
+    function balanceOf(address account, uint256 id) external view returns (uint256);
 
     //=============== ERC20 CONTRACT ========================
 
