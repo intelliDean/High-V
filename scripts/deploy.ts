@@ -48,17 +48,14 @@ main().catch((error) => {
 
 
 
-// DeploymentLib deployed to 0x142b3fA9917052573bd6480adeed0E4599A230b3
-// https://sepolia.etherscan.io/address/0x142b3fA9917052573bd6480adeed0E4599A230b3#code
+// DeploymentLib deployed to 0x31de5697a0C375b7842126Fb6964713535FA7604
+// HighVFactoryLib deployed to 0x92B8c6fb3E1a8988e9eb8Afcfb6895c839470708
 
-// HighVFactoryLib deployed to 0x614Bb1a5ED065afc98C4419BFd293f1AE04A19BE
-// https://sepolia.etherscan.io/address/0x614Bb1a5ED065afc98C4419BFd293f1AE04A19BE#code
+// HighVPay deployed to 0xE0fd265B43d5820957E1f0306f370Ca7f7dadf1F
+// https://sepolia.etherscan.io/address/0xE0fd265B43d5820957E1f0306f370Ca7f7dadf1F#code
 
-// HighVPay deployed to 0x5386d78CDec42F022521113Ec2A783ABd9Eb50f3
-// https://sepolia.etherscan.io/address/0x5386d78CDec42F022521113Ec2A783ABd9Eb50f3#code
+// HighVNFT deployed to 0x76cF9b8290824B73A477125ba322E13ab455d584
+// https://sepolia.etherscan.io/address/0x76cF9b8290824B73A477125ba322E13ab455d584#code
 
-// HighVNFT deployed to 0xd727e7aF56EF80180098617239Fd9d7F8961B8b1
-// https://sepolia.etherscan.io/address/0xd727e7aF56EF80180098617239Fd9d7F8961B8b1#code
-
-// HighVFactory contract deployed to:  0x6f4AffD4FABbbd742533109b3b9FD1E7Fcc93aa6
-// https://sepolia.etherscan.io/address/0x6f4AffD4FABbbd742533109b3b9FD1E7Fcc93aa6#code
+// HighVFactory contract deployed to:  0xC4D840Ec9dAf12395B35Db6FA6A37D703f7F9284
+// https://sepolia.etherscan.io/address/0xC4D840Ec9dAf12395B35Db6FA6A37D703f7F9284#code

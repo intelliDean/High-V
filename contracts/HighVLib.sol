@@ -27,7 +27,7 @@ library HighVLib {
             : IHighV.EventType.FREE;
         eventDetails.createdAt = block.timestamp;
 
-        uint _length = _eventData.dateTime.length;
+        uint256 _length = _eventData.dateTime.length;
 
         for (uint256 i = 0; i < _length; ) {
             eventDetails.dateTime.push(_eventData.dateTime[i]);
@@ -38,16 +38,20 @@ library HighVLib {
     }
 
     //2
-    function _getEventInfo(
-        IHighV.Event storage eventDetails
-    ) internal pure returns (IHighV.Event memory) {
+    function _getEventInfo(IHighV.Event storage eventDetails)
+        internal
+        pure
+        returns (IHighV.Event memory)
+    {
         return eventDetails;
     }
 
     //3
-    function _getCreator(
-        IHighV.Event storage eventDetails
-    ) internal view returns (address) {
+    function _getCreator(IHighV.Event storage eventDetails)
+        internal
+        view
+        returns (address)
+    {
         return eventDetails.creator;
     }
 
@@ -116,7 +120,7 @@ library HighVLib {
     ) internal view returns (IHighV.Registrant[] memory _allRegistrants) {
         _allRegistrants = new IHighV.Registrant[](allAttendees.length);
 
-        uint _length = allAttendees.length;
+        uint256 _length = allAttendees.length;
 
         for (uint256 i = 0; i < _length; ) {
             _allRegistrants[i] = registrants[allAttendees[i]];
@@ -221,9 +225,10 @@ library HighVLib {
     }
 
     //13
-    function _openOrCloseRegistration(
-        IHighV.Event storage eventDetails
-    ) internal returns (bytes32) {
+    function _openOrCloseRegistration(IHighV.Event storage eventDetails)
+        internal
+        returns (bytes32)
+    {
         if (
             eventDetails.eventStatus == IHighV.EventStatus.CANCELLED ||
             eventDetails.eventStatus == IHighV.EventStatus.ENDED
@@ -234,14 +239,16 @@ library HighVLib {
     }
 
     //14
-    function _startEvent(
-        IHighV.Event storage eventDetails
-    ) internal returns (bytes32) {
+    function _startEvent(IHighV.Event storage eventDetails)
+        internal
+        returns (bytes32)
+    {
         if (
-            eventDetails.eventStatus != IHighV.EventStatus.NULL ||
-            eventDetails.eventStatus != IHighV.EventStatus.POSTPONED ||
+            eventDetails.eventStatus != IHighV.EventStatus.NULL &&
+            eventDetails.eventStatus != IHighV.EventStatus.POSTPONED &&
             eventDetails.eventStatus != IHighV.EventStatus.PAUSED
         ) revert Errors.CANNOT_START_EVENT();
+
         eventDetails.eventStatus = IHighV.EventStatus.STARTED;
 
         return eventDetails.eventId;
@@ -254,7 +261,7 @@ library HighVLib {
     ) internal returns (bool) {
         if (_user.length == 0) revert Errors.ZERO_ARRAY_LENGTH();
 
-        uint _length = _user.length;
+        uint256 _length = _user.length;
 
         for (uint256 i = 0; i < _length; ) {
             //do not whitelist address(0)
@@ -278,22 +285,26 @@ library HighVLib {
     }
 
     //17
-    function _endEvent(
-        IHighV.Event storage eventDetails
-    ) internal checkStarted(eventDetails) returns (bytes32) {
-        if (eventDetails.eventStatus != IHighV.EventStatus.PAUSED)
-            revert Errors.CANNOT_END_EVENT();
+    function _endEvent(IHighV.Event storage eventDetails)
+        internal
+        returns (bytes32)
+    {
+        if (
+            eventDetails.eventStatus != IHighV.EventStatus.STARTED &&
+            eventDetails.eventStatus != IHighV.EventStatus.PAUSED
+        ) revert Errors.CANNOT_END_EVENT();
 
         eventDetails.eventStatus = IHighV.EventStatus.ENDED;
         return eventDetails.eventId;
     }
 
     //18
-    function _cancelEvent(
-        IHighV.Event storage eventDetails
-    ) internal returns (bytes32) {
+    function _cancelEvent(IHighV.Event storage eventDetails)
+        internal
+        returns (bytes32)
+    {
         if (
-            eventDetails.eventStatus != IHighV.EventStatus.NULL ||
+            eventDetails.eventStatus != IHighV.EventStatus.NULL &&
             eventDetails.eventStatus != IHighV.EventStatus.POSTPONED
         ) revert Errors.CANNOT_CANCEL_EVENT();
         eventDetails.eventStatus = IHighV.EventStatus.CANCELLED;
@@ -301,9 +312,10 @@ library HighVLib {
     }
 
     //19
-    function _postponeEvent(
-        IHighV.Event storage eventDetails
-    ) internal returns (bytes32) {
+    function _postponeEvent(IHighV.Event storage eventDetails)
+        internal
+        returns (bytes32)
+    {
         if (eventDetails.eventStatus != IHighV.EventStatus.NULL)
             revert Errors.CANNOT_POSTPONE_EVENT();
 
@@ -340,7 +352,7 @@ library HighVLib {
     ) internal returns (bool) {
         if (_userTypes.length == 0) revert Errors.ZERO_ARRAY_LENGTH();
 
-        uint _length = _userTypes.length;
+        uint256 _length = _userTypes.length;
 
         for (uint256 i = 0; i < _length; ) {
             userType[_userTypes[i]] = i + 1;
@@ -355,9 +367,11 @@ library HighVLib {
     }
 
     //22
-    function _getAllUserTypes(
-        string[] storage allUserTypes
-    ) internal pure returns (string[] memory) {
+    function _getAllUserTypes(string[] storage allUserTypes)
+        internal
+        pure
+        returns (string[] memory)
+    {
         return allUserTypes;
     }
 
@@ -370,7 +384,7 @@ library HighVLib {
     ) internal returns (bool) {
         if (_users.length == 0) revert Errors.ZERO_ARRAY_LENGTH();
 
-        uint _length = _users.length;
+        uint256 _length = _users.length;
 
         for (uint256 i = 0; i < _length; ) {
             registrants[_users[i]].regType = userType[_userType];
@@ -384,23 +398,27 @@ library HighVLib {
     }
 
     //24
-    function _pauseEvent(
-        IHighV.Event storage eventDetails
-    ) internal checkStarted(eventDetails) {
+    function _pauseEvent(IHighV.Event storage eventDetails)
+        internal
+        checkStarted(eventDetails)
+    {
         eventDetails.eventStatus = IHighV.EventStatus.PAUSED;
     }
 
     //25
-    function _getEventStatus(
-        IHighV.Event storage eventDetails
-    ) internal view returns (IHighV.EventStatus) {
+    function _getEventStatus(IHighV.Event storage eventDetails)
+        internal
+        view
+        returns (IHighV.EventStatus)
+    {
         return eventDetails.eventStatus;
     }
 
     //26
-    function _withdrawLockedEther(
-        IHighV.Event storage eventDetails
-    ) internal returns (bool) {
+    function _withdrawLockedEther(IHighV.Event storage eventDetails)
+        internal
+        returns (bool)
+    {
         (bool success, ) = eventDetails.creator.call{value: msg.value}("");
         if (!success) revert Errors.TRANSFER_FAIL();
         return success;

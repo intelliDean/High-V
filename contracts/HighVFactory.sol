@@ -15,7 +15,7 @@ contract HighVFactory {
     IHighV immutable creatorNFT;
 
     mapping(bytes32 => address) public eventsAddresses;
-    address[] allEvents;
+    address[] public allEvents;
 
     event FactoryCreatedEvent(
         address indexed creator,
@@ -128,6 +128,7 @@ contract HighVFactory {
     }
 
     //["Base Event", "dean@gmail.com", "08095729090", "image.com", "Base event for base developers", "The Zone, Gbagada", [[433973097539, 4339730973475, 4339730973900]], "DeFi", 0]
+// 0x6ff206d0b25b7dc84a1be54b869e6ef2206de85b5582d28307d378d02704d8b9
 
     //9
     function creatorUpdateVenue(

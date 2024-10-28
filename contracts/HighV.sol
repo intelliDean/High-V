@@ -126,7 +126,7 @@ contract HighV {
 
     //9
     function updateVenue(address _creator, string memory _venue)
-        external payable 
+        external 
         onlyOwner(_creator)
     {
         eventDetails._updateVenue(_venue);
@@ -134,7 +134,7 @@ contract HighV {
 
     //10
     function updateCreatorEmail(address _creator, string memory _creatorEmail)
-        external payable
+        external
         onlyOwner(_creator)
     {
         eventDetails._updateCreatorEmail(_creatorEmail);
@@ -142,7 +142,7 @@ contract HighV {
 
     //11
     function updateEventImageUrl(address _creator, string memory _eventImageUrl)
-        external payable
+        external
         onlyOwner(_creator)
     {
         eventDetails._updateEventImageUrl(_eventImageUrl);
@@ -150,7 +150,7 @@ contract HighV {
 
     //12
     function updateEventPrice(address _creator, uint256 _price)
-        external payable
+        external
         onlyOwner(_creator)
     {
         eventDetails._updateEventPrice(_price);
@@ -158,7 +158,7 @@ contract HighV {
 
     //13
     function openOrCloseRegistration(address _creator)
-        external payable
+        external
         onlyOwner(_creator)
     {
         bytes32 _eventId = eventDetails._openOrCloseRegistration();
@@ -167,14 +167,14 @@ contract HighV {
     }
 
     //14
-    function startEvent(address _creator) external payable onlyOwner(_creator) {
+    function startEvent(address _creator) external onlyOwner(_creator) {
         bytes32 _eventId = eventDetails._startEvent();
         emit EventStatus(_eventId, eventDetails.eventStatus);
     }
 
     //15 special attendees
     function whitelistUser(address _creator, address[] memory _user)
-        external payable
+        external
         onlyOwner(_creator)
         returns (bool)
     {
@@ -185,24 +185,24 @@ contract HighV {
     function updateCreatorPhoneNumber(
         address _creator,
         string memory _creatorPhoneNumber
-    ) external payable onlyOwner(_creator) {
+    ) external onlyOwner(_creator) {
         eventDetails._updateCreatorPhoneNumber(_creatorPhoneNumber);
     }
 
     //17
-    function endEvent(address _creator) external payable onlyOwner(_creator) {
+    function endEvent(address _creator) external onlyOwner(_creator) {
         bytes32 _eventId = eventDetails._endEvent();
         emit EventStatus(_eventId, eventDetails.eventStatus);
     }
 
     //18
-    function cancelEvent(address _creator) external payable onlyOwner(_creator) {
+    function cancelEvent(address _creator) external onlyOwner(_creator) {
         bytes32 _eventId = eventDetails._cancelEvent();
         emit EventStatus(_eventId, eventDetails.eventStatus);
     }
 
     //19
-    function postponeEvent(address _creator) external payable onlyOwner(_creator) {
+    function postponeEvent(address _creator) external onlyOwner(_creator) {
         bytes32 _eventId = eventDetails._postponeEvent();
         emit EventStatus(_eventId, eventDetails.eventStatus);
     }
@@ -219,7 +219,7 @@ contract HighV {
 
     //21 types could be speaker, vip, volunteers, etc
     function addUserTypes(address _creator, string[] memory _userTypes)
-        external payable
+        external
         onlyOwner(_creator)
         returns (bool)
     {
@@ -238,13 +238,13 @@ contract HighV {
         address _creator,
         address[] memory _users,
         string memory _userType
-    ) external payable onlyOwner(_creator) returns (bool) {
+    ) external onlyOwner(_creator) returns (bool) {
         return
             HighVLib._addTypeToUsers(registrants, userType, _users, _userType);
     }
 
     //24
-    function pauseEvent(address _creator) external payable onlyOwner(_creator) {
+    function pauseEvent(address _creator) external onlyOwner(_creator) {
         eventDetails._pauseEvent();
         emit EventStatus(eventDetails.eventId, eventDetails.eventStatus);
     }
@@ -254,7 +254,7 @@ contract HighV {
         return eventDetails._getEventStatus();
     }
 
-    function withdrawLockedEther() external payable returns (bool) {
+    function withdrawLockedEther() external returns (bool) {
         return eventDetails._withdrawLockedEther();
     }
 }
